@@ -5,6 +5,8 @@ using Script.CoreUObject;
 using Script.Engine;
 using Script.GeometryFramework;
 using Script.GeometryScriptingCore;
+using Script.IslandGenerator.Misc;
+using Script.Library;
 
 namespace Script.Game.Blueprint.Island
 {
@@ -14,14 +16,17 @@ namespace Script.Game.Blueprint.Island
         [IsOverride]
         public virtual void ReceiveBeginPlay()
         {
-            Console.WriteLine(">>>>>Debug ReceiveBeginPlay");
             TargetMesh = DynamicMeshComponent.GetDynamicMesh();
+            
             CreateIsland(false);
         }
 
         private List<FVector> SpawnPoints = new List<FVector>();
         private UDynamicMesh TargetMesh;
 
+        /**
+         * 创建岛屿
+         */
         [IsOverride]
         public virtual void CreateIsland(bool bSpawnMarkers)
         {
@@ -32,17 +37,22 @@ namespace Script.Game.Blueprint.Island
             SetNormal();
             Smoothing();
             PNTessellation();
+            CutUnderside();
             FlattenTop();
             ProjectUV();
+            SetIslandColor();
 
             if (bSpawnMarkers)
             {
                 SpawnMarkers();
             }
-            
+
             ReleaseAllComputeMeshes();
         }
 
+        /**
+         * 生成岛屿基础图形
+         */
         protected void Generate()
         {
             for (var i = 0; i < IslandsNumber; ++i)
@@ -115,11 +125,17 @@ namespace Script.Game.Blueprint.Island
             );
         }
 
+        /**
+         * 逐顶点重新计算法线。
+         */
         protected void SetNormal()
         {
             UGeometryScriptLibrary_MeshNormalsFunctions.SetPerVertexNormals(TargetMesh);
         }
 
+        /**
+         * 平滑网格体
+         */
         protected void Smoothing()
         {
             FGeometryScriptMeshSelection Selection = new FGeometryScriptMeshSelection();
@@ -136,6 +152,9 @@ namespace Script.Game.Blueprint.Island
             );
         }
 
+        /**
+         * 曲面细分
+         */
         protected void PNTessellation()
         {
             FGeometryScriptPNTessellateOptions Options = new FGeometryScriptPNTessellateOptions();
@@ -146,6 +165,9 @@ namespace Script.Game.Blueprint.Island
             );
         }
 
+        /**
+         * 裁剪底部
+         */
         protected void CutUnderside()
         {
             FVector Location = new FVector(0f, 0f, -390f);
@@ -165,6 +187,9 @@ namespace Script.Game.Blueprint.Island
             );
         }
 
+        /**
+         * 压平顶部
+         */
         protected void FlattenTop()
         {
             FVector Location = new FVector(0f, 0f, 0f);
@@ -180,6 +205,9 @@ namespace Script.Game.Blueprint.Island
             );
         }
 
+        /**
+         * 用平面投影到图形上，重新设置 uv
+         */
         protected void ProjectUV()
         {
             FVector Location = new FVector(0f, 0f, 0f);
@@ -197,6 +225,40 @@ namespace Script.Game.Blueprint.Island
             );
         }
 
+        /**
+         * 在绿色到蓝色之间随机岛屿颜色
+         */
+        protected void SetIslandColor()
+        {
+            MPC_Landscape Collection = Unreal.LoadObject<MPC_Landscape>(this);
+
+            FLinearColor GrassColour = UKismetMaterialLibrary.GetVectorParameterValue(
+                GetWorld(),
+                Collection,
+                "GrassColour"
+            );
+            
+            float H = 0;
+            float S = 0;
+            float V = 0;
+            float A = 0;
+            UKismetMathLibrary.RGBToHSV(GrassColour, ref H, ref S, ref V, ref S);
+            
+            FLinearColor NewColor = UKismetMathLibrary.HSVToRGB(
+                UKismetMathLibrary.RandomFloatInRangeFromStream(RandomStream, 0, 90),
+                S,
+                V,
+                A);
+            UKismetMaterialLibrary.SetVectorParameterValue(
+                null,
+                Collection,
+                "GrassColour",
+                NewColor);
+        }
+
+        /**
+         * 生成占位标记，用于后期生成岛屿上物体定位
+         */
         protected void SpawnMarkers()
         {
             foreach (var Loc in SpawnPoints)
@@ -205,6 +267,9 @@ namespace Script.Game.Blueprint.Island
             }
         }
 
+        /**
+         * 不同平台之间的参数切换
+         */
         protected int PlatformSwitch(int Low, int High)
         {
             int Result = High;
