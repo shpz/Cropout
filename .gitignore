@@ -73,3 +73,10 @@ Plugins/*/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+
+# UnrealCSharp automatically generated code
+Script/UE/*
+Script/Game/Proxy/*
+Script/Game/obj/*
+Script/Game/*.csproj
+.vsconfig
