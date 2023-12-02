@@ -1,36 +1,29 @@
-using System;
-using System.Collections.Generic;
 using Script.Common;
 using Script.CoreUObject;
 using Script.Engine;
-using Script.GeometryFramework;
 using Script.GeometryScriptingCore;
 using Script.IslandGenerator.Misc;
 using Script.Library;
 
-namespace Script.Game.Blueprint.Island
+namespace Script.IslandGenerator
 {
     [IsOverride]
-    public partial class BP_IslandGenerator_C
+    public partial class BP_IslandGen_C
     {
         [IsOverride]
         public virtual void ReceiveBeginPlay()
         {
-            TargetMesh = DynamicMeshComponent.GetDynamicMesh();
-            
-            CreateIsland(false);
+            Create_h20_Island(false);
         }
-
-        private List<FVector> SpawnPoints = new List<FVector>();
-        private UDynamicMesh TargetMesh;
 
         /**
          * 创建岛屿
          */
         [IsOverride]
-        public virtual void CreateIsland(bool bSpawnMarkers)
+        public virtual void Create_h20_Island(bool bSpawnMarkers)
         {
-            TargetMesh.Reset();
+            DynMesh = DynamicMeshComponent.GetDynamicMesh();
+            DynMesh.Reset();
 
             Generate();
             Solidify();
@@ -51,22 +44,40 @@ namespace Script.Game.Blueprint.Island
         }
 
         /**
+         * 不同平台之间的参数切换
+         */
+        [IsOverride]
+        public virtual int Platform_h20_Switch(int Low, int High)
+        {
+            int Result = High;
+            FString PlatformName = UGameplayStatics.GetPlatformName();
+            if (PlatformName == "Android"
+                || PlatformName == "IOS"
+                || PlatformName == "Switch")
+            {
+                Result = Low;
+            }
+
+            return Result;
+        }
+
+        /**
          * 生成岛屿基础图形
          */
         protected void Generate()
         {
-            for (var i = 0; i < IslandsNumber; ++i)
+            for (var i = 0; i < Islands; ++i)
             {
                 float BaseRadius = UKismetMathLibrary.RandomFloatInRangeFromStream(
-                    RandomStream,
-                    (float)IslandsSize.X,
-                    (float)IslandsSize.Y
+                    Seed,
+                    (float)Islands_h20_Size.X,
+                    (float)Islands_h20_Size.Y
                 );
 
                 float TopRadius = BaseRadius / 4f;
-                double Distance = MaxSpawnDistance * 0.5f;
+                double Distance = Max_h20_Spawn_h20_Distance * 0.5f;
 
-                FVector UnitVector = RandomStream.VRand();
+                FVector UnitVector = Seed.VRand();
                 FVector Location = new FVector(UnitVector.X * Distance, UnitVector.Y * Distance, -800);
                 FRotator Rotator = new FRotator(0, 0, 0);
                 FVector Scale = new FVector(1, 1, 1);
@@ -74,7 +85,7 @@ namespace Script.Game.Blueprint.Island
 
                 FGeometryScriptPrimitiveOptions Options = new FGeometryScriptPrimitiveOptions();
                 UGeometryScriptLibrary_MeshPrimitiveFunctions.AppendCone(
-                    TargetMesh,
+                    DynMesh,
                     Options,
                     Transform,
                     BaseRadius,
@@ -99,11 +110,11 @@ namespace Script.Game.Blueprint.Island
                 new FVector(0.0f, 0.0f, -800.0f),
                 new FRotator());
             UGeometryScriptLibrary_MeshPrimitiveFunctions.AppendBox(
-                TargetMesh,
+                DynMesh,
                 PrimitiveOptions,
                 Transform,
-                (float)MaxSpawnDistance + 10000f,
-                (float)MaxSpawnDistance + 10000f,
+                Max_h20_Spawn_h20_Distance + 10000f,
+                Max_h20_Spawn_h20_Distance + 10000f,
                 400.0f
             );
 
@@ -111,7 +122,7 @@ namespace Script.Game.Blueprint.Island
             FGeometryScriptSolidifyOptions SolidifyOptions = new FGeometryScriptSolidifyOptions();
             SolidifyOptions.GridParameters = new FGeometryScript3DGridParameters();
             SolidifyOptions.GridParameters.SizeMethod = EGeometryScriptGridSizingMethod.GridResolution;
-            SolidifyOptions.GridParameters.GridResolution = PlatformSwitch(50, 60);
+            SolidifyOptions.GridParameters.GridResolution = Platform_h20_Switch(50, 60);
 
             SolidifyOptions.WindingThreshold = 0.5f;
             SolidifyOptions.bSolidAtBoundaries = false;
@@ -120,7 +131,7 @@ namespace Script.Game.Blueprint.Island
             SolidifyOptions.bThickenShells = false;
             SolidifyOptions.ShellThickness = 1.0f;
             UGeometryScriptLibrary_MeshVoxelFunctions.ApplyMeshSolidify(
-                TargetMesh,
+                DynMesh,
                 SolidifyOptions
             );
         }
@@ -130,7 +141,7 @@ namespace Script.Game.Blueprint.Island
          */
         protected void SetNormal()
         {
-            UGeometryScriptLibrary_MeshNormalsFunctions.SetPerVertexNormals(TargetMesh);
+            UGeometryScriptLibrary_MeshNormalsFunctions.SetPerVertexNormals(DynMesh);
         }
 
         /**
@@ -146,7 +157,7 @@ namespace Script.Game.Blueprint.Island
             Options.EmptyBehavior = EGeometryScriptEmptySelectionBehavior.FullMeshSelection;
 
             UGeometryScriptLibrary_MeshDeformFunctions.ApplyIterativeSmoothingToMesh(
-                TargetMesh,
+                DynMesh,
                 Selection,
                 Options
             );
@@ -159,9 +170,9 @@ namespace Script.Game.Blueprint.Island
         {
             FGeometryScriptPNTessellateOptions Options = new FGeometryScriptPNTessellateOptions();
             UGeometryScriptLibrary_MeshSubdivideFunctions.ApplyPNTessellation(
-                TargetMesh,
+                DynMesh,
                 Options,
-                PlatformSwitch(0, 2)
+                Platform_h20_Switch(0, 2)
             );
         }
 
@@ -181,7 +192,7 @@ namespace Script.Game.Blueprint.Island
             Options.UVWorldDimension = 1f;
 
             UGeometryScriptLibrary_MeshBooleanFunctions.ApplyMeshPlaneCut(
-                TargetMesh,
+                DynMesh,
                 Transform,
                 Options
             );
@@ -199,7 +210,7 @@ namespace Script.Game.Blueprint.Island
             FGeometryScriptMeshPlaneCutOptions Options = new FGeometryScriptMeshPlaneCutOptions();
 
             UGeometryScriptLibrary_MeshBooleanFunctions.ApplyMeshPlaneCut(
-                TargetMesh,
+                DynMesh,
                 Transform,
                 Options
             );
@@ -218,7 +229,7 @@ namespace Script.Game.Blueprint.Island
             FGeometryScriptMeshSelection Selection = new FGeometryScriptMeshSelection();
 
             UGeometryScriptLibrary_MeshUVFunctions.SetMeshUVsFromPlanarProjection(
-                TargetMesh,
+                DynMesh,
                 0,
                 Transform,
                 Selection
@@ -237,15 +248,15 @@ namespace Script.Game.Blueprint.Island
                 Collection,
                 "GrassColour"
             );
-            
+
             float H = 0;
             float S = 0;
             float V = 0;
             float A = 0;
             UKismetMathLibrary.RGBToHSV(GrassColour, ref H, ref S, ref V, ref S);
-            
+
             FLinearColor NewColor = UKismetMathLibrary.HSVToRGB(
-                UKismetMathLibrary.RandomFloatInRangeFromStream(RandomStream, 0, 90),
+                UKismetMathLibrary.RandomFloatInRangeFromStream(Seed, 0, 90),
                 S,
                 V,
                 A);
@@ -263,25 +274,8 @@ namespace Script.Game.Blueprint.Island
         {
             foreach (var Loc in SpawnPoints)
             {
-                GetWorld().SpawnActor<BP_SpawnMark_C>(UKismetMathLibrary.MakeTransform(Loc, new FRotator()));
+                GetWorld().SpawnActor<BP_SpawnMarker_C>(UKismetMathLibrary.MakeTransform(Loc, new FRotator()));
             }
-        }
-
-        /**
-         * 不同平台之间的参数切换
-         */
-        protected int PlatformSwitch(int Low, int High)
-        {
-            int Result = High;
-            FString PlatformName = UGameplayStatics.GetPlatformName();
-            if (PlatformName == "Android"
-                || PlatformName == "IOS"
-                || PlatformName == "Switch")
-            {
-                Result = Low;
-            }
-
-            return Result;
         }
     }
 }
