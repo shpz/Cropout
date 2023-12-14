@@ -1,3 +1,4 @@
+using System;
 using Script.Common;
 using Script.CoreUObject;
 using Script.Engine;
@@ -13,7 +14,8 @@ namespace Script.IslandGenerator
         [IsOverride]
         public virtual void ReceiveBeginPlay()
         {
-            Create_h20_Island(false);
+            Console.WriteLine("Islands " + Islands);
+            // Create_h20_Island(false);
         }
 
         /**
