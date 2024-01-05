@@ -9,11 +9,11 @@ namespace Script.Engine
 {
     public partial class UInputComponent
     {
-        public void BindAction(FName InActionName, EInputEvent InInputEvent, Action<FKey> InAction)
+        public void BindAction(FName InActionName, EInputEvent InInputEvent, UObject InObject, Action<FKey> InAction)
         {
             InputComponentImplementation
                 .InputComponent_GetDynamicBindingObjectImplementation<UInputActionDelegateBinding>(
-                    GetOwner().GetClass().GetHandle(),
+                    InObject.GetClass().GetHandle(),
                     UInputActionDelegateBinding.StaticClass().GetHandle(),
                     out var InputActionDelegateBinding);
 
@@ -39,16 +39,16 @@ namespace Script.Engine
                 InputComponentImplementation.InputComponent_BindActionImplementation(
                     GetHandle(),
                     InputActionDelegateBinding.GetHandle(),
-                    GetOwner().GetHandle(),
+                    InObject.GetHandle(),
                     Binding.FunctionNameToBind);
             }
         }
 
-        public void BindAxis(FName InAxisName, Action<Single> InAction)
+        public void BindAxis(FName InAxisName, UObject InObject, Action<Single> InAction)
         {
             InputComponentImplementation
                 .InputComponent_GetDynamicBindingObjectImplementation<UInputAxisDelegateBinding>(
-                    GetOwner().GetClass().GetHandle(),
+                    InObject.GetClass().GetHandle(),
                     UInputAxisDelegateBinding.StaticClass().GetHandle(),
                     out var InputAxisDelegateBinding);
 
@@ -73,16 +73,16 @@ namespace Script.Engine
                 InputComponentImplementation.InputComponent_BindAxisImplementation(
                     GetHandle(),
                     InputAxisDelegateBinding.GetHandle(),
-                    GetOwner().GetHandle(),
+                    InObject.GetHandle(),
                     Binding.FunctionNameToBind);
             }
         }
 
-        public void BindAxisKey(FKey InKey, Action<Single> InAction)
+        public void BindAxisKey(FKey InKey, UObject InObject, Action<Single> InAction)
         {
             InputComponentImplementation
                 .InputComponent_GetDynamicBindingObjectImplementation<UInputAxisKeyDelegateBinding>(
-                    GetOwner().GetClass().GetHandle(),
+                    InObject.GetClass().GetHandle(),
                     UInputAxisKeyDelegateBinding.StaticClass().GetHandle(),
                     out var InputAxisKeyDelegateBinding);
 
@@ -107,15 +107,15 @@ namespace Script.Engine
                 InputComponentImplementation.InputComponent_BindAxisKeyImplementation(
                     GetHandle(),
                     InputAxisKeyDelegateBinding.GetHandle(),
-                    GetOwner().GetHandle(),
+                    InObject.GetHandle(),
                     Binding.FunctionNameToBind);
             }
         }
 
-        public void BindKey(FInputChord InInputChord, EInputEvent InInputEvent, Action InAction)
+        public void BindKey(FInputChord InInputChord, EInputEvent InInputEvent, UObject InObject, Action<FKey> InAction)
         {
             InputComponentImplementation.InputComponent_GetDynamicBindingObjectImplementation<UInputKeyDelegateBinding>(
-                GetOwner().GetClass().GetHandle(),
+                InObject.GetClass().GetHandle(),
                 UInputKeyDelegateBinding.StaticClass().GetHandle(),
                 out var InputKeyDelegateBinding);
 
@@ -141,12 +141,12 @@ namespace Script.Engine
                 InputComponentImplementation.InputComponent_BindKeyImplementation(
                     GetHandle(),
                     InputKeyDelegateBinding.GetHandle(),
-                    GetOwner().GetHandle(),
+                    InObject.GetHandle(),
                     Binding.FunctionNameToBind);
             }
         }
 
-        public void BindKey(FKey InKey, EInputEvent InInputEvent, Action InAction)
+        public void BindKey(FKey InKey, EInputEvent InInputEvent, UObject InObject, Action<FKey> InAction)
         {
             BindKey(new FInputChord
                 {
@@ -157,14 +157,15 @@ namespace Script.Engine
                     bCmd = false
                 },
                 InInputEvent,
+                InObject,
                 InAction);
         }
 
-        public void BindTouch(EInputEvent InInputEvent, Action<ETouchIndex, FVector> InAction)
+        public void BindTouch(EInputEvent InInputEvent, UObject InObject, Action<ETouchIndex, FVector> InAction)
         {
             InputComponentImplementation
                 .InputComponent_GetDynamicBindingObjectImplementation<UInputTouchDelegateBinding>(
-                    GetOwner().GetClass().GetHandle(),
+                    InObject.GetClass().GetHandle(),
                     UInputTouchDelegateBinding.StaticClass().GetHandle(),
                     out var InputTouchDelegateBinding);
 
@@ -189,16 +190,16 @@ namespace Script.Engine
                 InputComponentImplementation.InputComponent_BindTouchImplementation(
                     GetHandle(),
                     InputTouchDelegateBinding.GetHandle(),
-                    GetOwner().GetHandle(),
+                    InObject.GetHandle(),
                     Binding.FunctionNameToBind);
             }
         }
 
-        public void BindVectorAxis(FKey InKey, Action<FVector> InAction)
+        public void BindVectorAxis(FKey InKey, UObject InObject, Action<FVector> InAction)
         {
             InputComponentImplementation
                 .InputComponent_GetDynamicBindingObjectImplementation<UInputVectorAxisDelegateBinding>(
-                    GetOwner().GetClass().GetHandle(),
+                    InObject.GetClass().GetHandle(),
                     UInputVectorAxisDelegateBinding.StaticClass().GetHandle(),
                     out var InputVectorAxisDelegateBinding);
 
@@ -223,7 +224,7 @@ namespace Script.Engine
                 InputComponentImplementation.InputComponent_BindVectorAxisImplementation(
                     GetHandle(),
                     InputVectorAxisDelegateBinding.GetHandle(),
-                    GetOwner().GetHandle(),
+                    InObject.GetHandle(),
                     Binding.FunctionNameToBind);
             }
         }

@@ -37,27 +37,57 @@ struct FRegisterInputComponent
 		}
 	}
 
-	static void BindActionImplementation(const FGarbageCollectionHandle InGarbageCollectionHandle,
-	                                     const FGarbageCollectionHandle InInputActionDelegateBinding,
-	                                     const FGarbageCollectionHandle InObjectToBindTo,
-	                                     MonoObject* InFunctionNameToBind)
+	template <typename T>
+	static void BindImplementation(const FGarbageCollectionHandle InGarbageCollectionHandle,
+	                               const FGarbageCollectionHandle InInputDelegateBinding,
+	                               const FGarbageCollectionHandle InObjectToBindTo,
+	                               MonoObject* InFunctionNameToBind,
+	                               const TFunction<void(UClass*, const FName&)>& InFunction
+	)
 	{
 		if (const auto FoundObject = FCSharpEnvironment::GetEnvironment().GetObject<UInputComponent>(
 			InGarbageCollectionHandle))
 		{
-			const auto InputActionDelegateBinding = FCSharpEnvironment::GetEnvironment().GetObject<
-				UInputActionDelegateBinding>(InInputActionDelegateBinding);
+			const auto InputDelegateBinding = FCSharpEnvironment::GetEnvironment().GetObject<T>(InInputDelegateBinding);
 
 			const auto ObjectToBindTo = FCSharpEnvironment::GetEnvironment().GetObject<UObject>(InObjectToBindTo);
 
-			InputActionDelegateBinding->BindToInputComponent(FoundObject, ObjectToBindTo);
+			InputDelegateBinding->BindToInputComponent(FoundObject, ObjectToBindTo);
 
 			const auto FunctionNameToBind = FName(UTF8_TO_TCHAR(
 				FCSharpEnvironment::GetEnvironment().GetDomain()->String_To_UTF8(FCSharpEnvironment::GetEnvironment().
 					GetDomain()->Object_To_String(InFunctionNameToBind, nullptr))));
 
-			BindActionFunction(ObjectToBindTo->GetClass(), FunctionNameToBind);
+			InFunction(ObjectToBindTo->GetClass(), FunctionNameToBind);
 		}
+	}
+
+	static void BindActionImplementation(const FGarbageCollectionHandle InGarbageCollectionHandle,
+	                                     const FGarbageCollectionHandle InInputActionDelegateBinding,
+	                                     const FGarbageCollectionHandle InObjectToBindTo,
+	                                     MonoObject* InFunctionNameToBind)
+	{
+		BindImplementation<UInputActionDelegateBinding>(
+			InGarbageCollectionHandle,
+			InInputActionDelegateBinding,
+			InObjectToBindTo,
+			InFunctionNameToBind,
+			[](UClass* InClass, const FName& InFunctionName)
+			{
+				BindFunction(InClass, InFunctionName, [](UFunction* InFunction)
+				{
+					const auto Property = new FStructProperty(InFunction, TEXT("Key"), RF_Public | RF_Transient);
+
+					Property->ElementSize = FKey::StaticStruct()->GetStructureSize();
+
+					Property->Struct = FKey::StaticStruct();
+
+					Property->SetPropertyFlags(CPF_Parm);
+
+					InFunction->AddCppProperty(Property);
+				});
+			}
+		);
 	}
 
 	static void BindAxisImplementation(const FGarbageCollectionHandle InGarbageCollectionHandle,
@@ -65,22 +95,22 @@ struct FRegisterInputComponent
 	                                   const FGarbageCollectionHandle InObjectToBindTo,
 	                                   MonoObject* InFunctionNameToBind)
 	{
-		if (const auto FoundObject = FCSharpEnvironment::GetEnvironment().GetObject<UInputComponent>(
-			InGarbageCollectionHandle))
-		{
-			const auto InputAxisDelegateBinding = FCSharpEnvironment::GetEnvironment().GetObject<
-				UInputAxisDelegateBinding>(InInputAxisDelegateBinding);
+		BindImplementation<UInputAxisDelegateBinding>(
+			InGarbageCollectionHandle,
+			InInputAxisDelegateBinding,
+			InObjectToBindTo,
+			InFunctionNameToBind,
+			[](UClass* InClass, const FName& InFunctionName)
+			{
+				BindFunction(InClass, InFunctionName, [](UFunction* InFunction)
+				{
+					const auto Property = new FFloatProperty(InFunction, TEXT("AxisValue"), RF_Public | RF_Transient);
 
-			const auto ObjectToBindTo = FCSharpEnvironment::GetEnvironment().GetObject<UObject>(InObjectToBindTo);
+					Property->SetPropertyFlags(CPF_Parm);
 
-			InputAxisDelegateBinding->BindToInputComponent(FoundObject, ObjectToBindTo);
-
-			const auto FunctionNameToBind = FName(UTF8_TO_TCHAR(
-				FCSharpEnvironment::GetEnvironment().GetDomain()->String_To_UTF8(FCSharpEnvironment::GetEnvironment().
-					GetDomain()->Object_To_String(InFunctionNameToBind, nullptr))));
-
-			BindAxisFunction(ObjectToBindTo->GetClass(), FunctionNameToBind);
-		}
+					InFunction->AddCppProperty(Property);
+				});
+			});
 	}
 
 	static void BindAxisKeyImplementation(const FGarbageCollectionHandle InGarbageCollectionHandle,
@@ -88,44 +118,48 @@ struct FRegisterInputComponent
 	                                      const FGarbageCollectionHandle InObjectToBindTo,
 	                                      MonoObject* InFunctionNameToBind)
 	{
-		if (const auto FoundObject = FCSharpEnvironment::GetEnvironment().GetObject<UInputComponent>(
-			InGarbageCollectionHandle))
-		{
-			const auto InputAxisKeyDelegateBinding = FCSharpEnvironment::GetEnvironment().GetObject<
-				UInputAxisKeyDelegateBinding>(InInputAxisKeyDelegateBinding);
+		BindImplementation<UInputAxisKeyDelegateBinding>(
+			InGarbageCollectionHandle,
+			InInputAxisKeyDelegateBinding,
+			InObjectToBindTo,
+			InFunctionNameToBind,
+			[](UClass* InClass, const FName& InFunctionName)
+			{
+				BindFunction(InClass, InFunctionName, [](UFunction* InFunction)
+				{
+					const auto Property = new FFloatProperty(InFunction, TEXT("AxisValue"), RF_Public | RF_Transient);
 
-			const auto ObjectToBindTo = FCSharpEnvironment::GetEnvironment().GetObject<UObject>(InObjectToBindTo);
+					Property->SetPropertyFlags(CPF_Parm);
 
-			InputAxisKeyDelegateBinding->BindToInputComponent(FoundObject, ObjectToBindTo);
-
-			const auto FunctionNameToBind = FName(UTF8_TO_TCHAR(
-				FCSharpEnvironment::GetEnvironment().GetDomain()->String_To_UTF8(FCSharpEnvironment::GetEnvironment().
-					GetDomain()->Object_To_String(InFunctionNameToBind, nullptr))));
-
-			BindAxisFunction(ObjectToBindTo->GetClass(), FunctionNameToBind);
-		}
+					InFunction->AddCppProperty(Property);
+				});
+			});
 	}
 
 	static void BindKeyImplementation(const FGarbageCollectionHandle InGarbageCollectionHandle,
 	                                  const FGarbageCollectionHandle InInputKeyDelegateBinding,
 	                                  const FGarbageCollectionHandle InObjectToBindTo, MonoObject* InFunctionNameToBind)
 	{
-		if (const auto FoundObject = FCSharpEnvironment::GetEnvironment().GetObject<UInputComponent>(
-			InGarbageCollectionHandle))
-		{
-			const auto InputKeyDelegateBinding = FCSharpEnvironment::GetEnvironment().GetObject<
-				UInputKeyDelegateBinding>(InInputKeyDelegateBinding);
+		BindImplementation<UInputKeyDelegateBinding>(
+			InGarbageCollectionHandle,
+			InInputKeyDelegateBinding,
+			InObjectToBindTo,
+			InFunctionNameToBind,
+			[](UClass* InClass, const FName& InFunctionName)
+			{
+				BindFunction(InClass, InFunctionName, [](UFunction* InFunction)
+				{
+					const auto Property = new FStructProperty(InFunction, TEXT("Key"), RF_Public | RF_Transient);
 
-			const auto ObjectToBindTo = FCSharpEnvironment::GetEnvironment().GetObject<UObject>(InObjectToBindTo);
+					Property->ElementSize = FKey::StaticStruct()->GetStructureSize();
 
-			InputKeyDelegateBinding->BindToInputComponent(FoundObject, ObjectToBindTo);
+					Property->Struct = FKey::StaticStruct();
 
-			const auto FunctionNameToBind = FName(UTF8_TO_TCHAR(
-				FCSharpEnvironment::GetEnvironment().GetDomain()->String_To_UTF8(FCSharpEnvironment::GetEnvironment().
-					GetDomain()->Object_To_String(InFunctionNameToBind, nullptr))));
+					Property->SetPropertyFlags(CPF_Parm);
 
-			BindKeyFunction(ObjectToBindTo->GetClass(), FunctionNameToBind);
-		}
+					InFunction->AddCppProperty(Property);
+				});
+			});
 	}
 
 	static void BindTouchImplementation(const FGarbageCollectionHandle InGarbageCollectionHandle,
@@ -133,22 +167,38 @@ struct FRegisterInputComponent
 	                                    const FGarbageCollectionHandle InObjectToBindTo,
 	                                    MonoObject* InFunctionNameToBind)
 	{
-		if (const auto FoundObject = FCSharpEnvironment::GetEnvironment().GetObject<UInputComponent>(
-			InGarbageCollectionHandle))
-		{
-			const auto InputTouchDelegateBinding = FCSharpEnvironment::GetEnvironment().GetObject<
-				UInputTouchDelegateBinding>(InInputTouchDelegateBinding);
+		BindImplementation<UInputTouchDelegateBinding>(
+			InGarbageCollectionHandle,
+			InInputTouchDelegateBinding,
+			InObjectToBindTo,
+			InFunctionNameToBind,
+			[](UClass* InClass, const FName& InFunctionName)
+			{
+				BindFunction(InClass, InFunctionName, [](UFunction* InFunction)
+				{
+					const auto LocationProperty = new FStructProperty(InFunction, TEXT("Location"),
+					                                                  RF_Public | RF_Transient);
 
-			const auto ObjectToBindTo = FCSharpEnvironment::GetEnvironment().GetObject<UObject>(InObjectToBindTo);
+					LocationProperty->ElementSize = TBaseStructure<FVector2D>().Get()->GetStructureSize();
 
-			InputTouchDelegateBinding->BindToInputComponent(FoundObject, ObjectToBindTo);
+					LocationProperty->Struct = TBaseStructure<FVector2D>().Get();
 
-			const auto FunctionNameToBind = FName(UTF8_TO_TCHAR(
-				FCSharpEnvironment::GetEnvironment().GetDomain()->String_To_UTF8(FCSharpEnvironment::GetEnvironment().
-					GetDomain()->Object_To_String(InFunctionNameToBind, nullptr))));
+					LocationProperty->SetPropertyFlags(CPF_Parm);
 
-			BindTouchFunction(ObjectToBindTo->GetClass(), FunctionNameToBind);
-		}
+					InFunction->AddCppProperty(LocationProperty);
+
+					const auto FingerIndexProperty = new FEnumProperty(InFunction, TEXT("FingerIndex"),
+					                                                   RF_Public | RF_Transient);
+
+					FingerIndexProperty->ElementSize = sizeof(uint8);
+
+					FingerIndexProperty->SetEnum(LoadObject<UEnum>(nullptr, TEXT("/Script/InputCore.ETouchIndex")));
+
+					FingerIndexProperty->SetPropertyFlags(CPF_Parm);
+
+					InFunction->AddCppProperty(FingerIndexProperty);
+				});
+			});
 	}
 
 	static void BindVectorAxisImplementation(const FGarbageCollectionHandle InGarbageCollectionHandle,
@@ -156,22 +206,26 @@ struct FRegisterInputComponent
 	                                         const FGarbageCollectionHandle InObjectToBindTo,
 	                                         MonoObject* InFunctionNameToBind)
 	{
-		if (const auto FoundObject = FCSharpEnvironment::GetEnvironment().GetObject<UInputComponent>(
-			InGarbageCollectionHandle))
-		{
-			const auto InputVectorAxisDelegateBinding = FCSharpEnvironment::GetEnvironment().GetObject<
-				UInputVectorAxisDelegateBinding>(InInputVectorAxisDelegateBinding);
+		BindImplementation<UInputVectorAxisDelegateBinding>(
+			InGarbageCollectionHandle,
+			InInputVectorAxisDelegateBinding,
+			InObjectToBindTo,
+			InFunctionNameToBind,
+			[](UClass* InClass, const FName& InFunctionName)
+			{
+				BindFunction(InClass, InFunctionName, [](UFunction* InFunction)
+				{
+					const auto Property = new FStructProperty(InFunction, TEXT("AxisValue"), RF_Public | RF_Transient);
 
-			const auto ObjectToBindTo = FCSharpEnvironment::GetEnvironment().GetObject<UObject>(InObjectToBindTo);
+					Property->ElementSize = TBaseStructure<FVector2D>().Get()->GetStructureSize();
 
-			InputVectorAxisDelegateBinding->BindToInputComponent(FoundObject, ObjectToBindTo);
+					Property->Struct = TBaseStructure<FVector2D>().Get();
 
-			const auto FunctionNameToBind = FName(UTF8_TO_TCHAR(
-				FCSharpEnvironment::GetEnvironment().GetDomain()->String_To_UTF8(FCSharpEnvironment::GetEnvironment().
-					GetDomain()->Object_To_String(InFunctionNameToBind, nullptr))));
+					Property->SetPropertyFlags(CPF_Parm);
 
-			BindVectorAxisFunction(ObjectToBindTo->GetClass(), FunctionNameToBind);
-		}
+					InFunction->AddCppProperty(Property);
+				});
+			});
 	}
 
 	static void BindFunction(UClass* InClass, const FName& InFunctionName,
@@ -206,84 +260,6 @@ struct FRegisterInputComponent
 		Function->AddToRoot();
 
 		FCSharpEnvironment::GetEnvironment().Bind(Function);
-	}
-
-	static void BindActionFunction(UClass* InClass, const FName& InFunctionName)
-	{
-		BindFunction(InClass, InFunctionName, [](UFunction* InFunction)
-		{
-			const auto Property = new FStructProperty(InFunction, TEXT("Key"), RF_Public | RF_Transient);
-
-			Property->ElementSize = FKey::StaticStruct()->GetStructureSize();
-
-			Property->Struct = FKey::StaticStruct();
-
-			Property->SetPropertyFlags(CPF_Parm);
-
-			InFunction->AddCppProperty(Property);
-		});
-	}
-
-	static void BindAxisFunction(UClass* InClass, const FName& InFunctionName)
-	{
-		BindFunction(InClass, InFunctionName, [](UFunction* InFunction)
-		{
-			const auto Property = new FFloatProperty(InFunction, TEXT("AxisValue"), RF_Public | RF_Transient);
-
-			Property->SetPropertyFlags(CPF_Parm);
-
-			InFunction->AddCppProperty(Property);
-		});
-	}
-
-	static void BindKeyFunction(UClass* InClass, const FName& InFunctionName)
-	{
-		BindFunction(InClass, InFunctionName, [](UFunction* InFunction)
-		{
-		});
-	}
-
-	static void BindTouchFunction(UClass* InClass, const FName& InFunctionName)
-	{
-		BindFunction(InClass, InFunctionName, [](UFunction* InFunction)
-		{
-			const auto LocationProperty = new FStructProperty(InFunction, TEXT("Location"), RF_Public | RF_Transient);
-
-			LocationProperty->ElementSize = TBaseStructure<FVector2D>().Get()->GetStructureSize();
-
-			LocationProperty->Struct = TBaseStructure<FVector2D>().Get();
-
-			LocationProperty->SetPropertyFlags(CPF_Parm);
-
-			InFunction->AddCppProperty(LocationProperty);
-
-			const auto FingerIndexProperty = new FEnumProperty(InFunction, TEXT("FingerIndex"),
-			                                                   RF_Public | RF_Transient);
-
-			FingerIndexProperty->ElementSize = sizeof(uint8);
-
-			FingerIndexProperty->SetEnum(LoadObject<UEnum>(nullptr, TEXT("/Script/InputCore.ETouchIndex")));
-
-			FingerIndexProperty->SetPropertyFlags(CPF_Parm);
-
-			InFunction->AddCppProperty(FingerIndexProperty);
-		});
-	}
-
-	static void BindVectorAxisFunction(UClass* InClass, const FName& InFunctionName)
-	{
-		BindFunction(InClass, InFunctionName, [](UFunction* InFunction)
-		{
-			const auto Property = new FStructProperty(InFunction, TEXT("AxisValue"), RF_Public | RF_Transient);
-
-			Property->ElementSize = TBaseStructure<FVector2D>().Get()->GetStructureSize();
-
-			Property->Struct = TBaseStructure<FVector2D>().Get();
-
-			Property->SetPropertyFlags(CPF_Parm);
-
-			InFunction->AddCppProperty(Property);
-		});
 	}
 
 	FRegisterInputComponent()

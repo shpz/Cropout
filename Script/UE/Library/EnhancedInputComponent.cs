@@ -7,18 +7,19 @@ namespace Script.EnhancedInput
     public partial class UEnhancedInputComponent
     {
         public void BindAction<T>(ETriggerEvent InTriggerEvent,
+            UObject InObject,
             Action<FInputActionValue, Single, Single, UInputAction> InAction)
             where T : UInputAction, IStaticClass
         {
-            BindAction(Unreal.LoadObject<T>(this), InTriggerEvent, InAction);
+            BindAction(Unreal.LoadObject<T>(this), InTriggerEvent, InObject, InAction);
         }
 
         public void BindAction(UInputAction InInputAction, ETriggerEvent InTriggerEvent,
-            Action<FInputActionValue, Single, Single, UInputAction> InAction)
+            UObject InObject, Action<FInputActionValue, Single, Single, UInputAction> InAction)
         {
             EnhancedInputComponentImplementation
                 .EnhancedInputComponent_GetDynamicBindingObjectImplementation<UEnhancedInputActionDelegateBinding>(
-                    GetOwner().GetClass().GetHandle(),
+                    InObject.GetClass().GetHandle(),
                     UEnhancedInputActionDelegateBinding.StaticClass().GetHandle(),
                     out var EnhancedInputActionDelegateBinding
                 );
@@ -43,7 +44,7 @@ namespace Script.EnhancedInput
                 EnhancedInputActionDelegateBinding.InputActionDelegateBindings.Add(Binding);
 
                 EnhancedInputComponentImplementation.EnhancedInputComponent_BindActionImplementation(
-                    GetHandle(), Binding.GetHandle(), GetOwner().GetHandle(), Binding.FunctionNameToBind);
+                    GetHandle(), Binding.GetHandle(), InObject.GetHandle(), Binding.FunctionNameToBind);
             }
         }
     }
