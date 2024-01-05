@@ -14,8 +14,8 @@ namespace Script.IslandGenerator
         [IsOverride]
         public virtual void ReceiveBeginPlay()
         {
-            Console.WriteLine("Islands " + Islands);
-            // Create_h20_Island(false);
+            Console.WriteLine("1233333333333333333");
+            Create_h20_Island(false);
         }
 
         /**
@@ -43,6 +43,7 @@ namespace Script.IslandGenerator
             }
 
             ReleaseAllComputeMeshes();
+            GenNavmesh();
         }
 
         /**
@@ -278,6 +279,13 @@ namespace Script.IslandGenerator
             {
                 GetWorld().SpawnActor<BP_SpawnMarker_C>(UKismetMathLibrary.MakeTransform(Loc, new FRotator()));
             }
+        }
+        
+        protected void GenNavmesh()
+        {
+            var Offset = new FVector(0, 0, 0.05);
+            var HitResult = new FHitResult();
+            K2_AddActorWorldOffset(Offset, false, ref HitResult, false);
         }
     }
 }

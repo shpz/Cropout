@@ -11,34 +11,40 @@ using Script.NavigationSystem;
 
 namespace Script.IslandGenerator.Spawner
 {
+    [IsOverride]
     public partial class BP_Spawner_C
     {
+        [IsOverride]
         public virtual void ReceiveBeginPlay()
         {
             AsyncLoad_h20_Classes();
-
+            
             if (Auto_h20_Spawn)
             {
                 DelayUntilNextTick();
             }
         }
 
+        [IsOverride]
         public virtual void Ready_h20_To_h20_Spawn()
         {
             TickIfSpawn();
         }
 
+        [IsOverride]
         public virtual void Finished_h20_Spawning()
         {
             (UGameplayStatics.GetGameInstance(this) as IBPI_GI_C)?.Update_h20_All_h20_Interactables();
             (UGameplayStatics.GetGameInstance(this) as IBPI_IslandPlugin_C)?.Spawning_h20_Complete();
         }
 
+        [IsOverride]
         public virtual void Spawn_h20_Random()
         {
             DelayUntilNextTick();
         }
 
+        [IsOverride]
         public virtual void Spawn_h20_Mesh_h20_Only()
         {
             Actor_h20_Switch = false;
@@ -48,6 +54,7 @@ namespace Script.IslandGenerator.Spawner
         /**
          * 为了保持蓝图结构，保留了这个函数的命名，实际为同步加载
          */
+        [IsOverride]
         public virtual void AsyncLoad_h20_Classes()
         {
             Class_h20_Ref_h20_Index = 0;
@@ -59,6 +66,7 @@ namespace Script.IslandGenerator.Spawner
         /**
          * 实际加载资产的函数
          */
+        [IsOverride]
         public virtual void Async_h20_Class()
         {
             UClass ClassRef = SpawnTypes[0].ClassRef.LoadSynchronous();
@@ -80,6 +88,7 @@ namespace Script.IslandGenerator.Spawner
         /**
          * 生成资产
          */
+        [IsOverride]
         public virtual void SpawnAssets(TSubclassOf<AActor> Class, ST_SpawnData SpawnParams)
         {
             int Counter = 0;
@@ -87,7 +96,7 @@ namespace Script.IslandGenerator.Spawner
             {
                 FVector Pos = new FVector();
                 RandomBiomePoint(ref Pos);
-
+                
                 int Max = UKismetMathLibrary.RandomIntegerInRangeFromStream(
                     Seed,
                     0,
@@ -98,7 +107,7 @@ namespace Script.IslandGenerator.Spawner
                 {
                     FVector SpawnPos = new FVector();
                     UNavigationSystemV1.K2_GetRandomLocationInNavigableRadius(
-                        this,
+                        GetWorld(),
                         Pos,
                         ref SpawnPos,
                         (float)SpawnParams.Biome_h20_Scale_h20__h20__h20__h20__h20_,
@@ -137,6 +146,7 @@ namespace Script.IslandGenerator.Spawner
             }
         }
 
+        [IsOverride]
         public virtual void Load_h20_Spawn(ST_SaveInteract NewParam = null)
         {
         }
@@ -144,9 +154,13 @@ namespace Script.IslandGenerator.Spawner
         /**
          * 生成静态网格体
          */
+        [IsOverride]
         public virtual void SpawnInst(UInstancedStaticMeshComponent Class = null, Single Radius = 0f,
             Int32 Biome_h20_Count = 0, Int32 Max_h20_Spawn = 0)
         {
+            
+            Console.WriteLine("SpawnInst Biome_h20_Count " + Biome_h20_Count);
+            
             int Counter = 0;
             for (int i = 0; i <= Biome_h20_Count; ++i)
             {
@@ -190,8 +204,6 @@ namespace Script.IslandGenerator.Spawner
             Counter = 0;
             Index_h20_Counter = 0;
 
-            await Task.Delay(100);
-
             TickIfSpawn();
         }
 
@@ -219,11 +231,9 @@ namespace Script.IslandGenerator.Spawner
                 if (Index_h20_Counter >= SpawnTypes.Num())
                 {
                     Index_h20_Counter = 0;
-                }
-                else
-                {
                     Actor_h20_Switch = false;
                 }
+                TickIfSpawn();
             }
             else
             {
@@ -252,6 +262,10 @@ namespace Script.IslandGenerator.Spawner
                         Finished_h20_Spawning();
                     }
                 }
+                else
+                {
+                    TickIfSpawn();
+                }
             }
         }
 
@@ -262,7 +276,7 @@ namespace Script.IslandGenerator.Spawner
         {
             FVector Origin = new FVector(0f, 0f, 0f);
             UNavigationSystemV1.K2_GetRandomLocationInNavigableRadius(
-                this,
+                GetWorld(),
                 Origin,
                 ref Point,
                 10000f,
