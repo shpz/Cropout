@@ -1,6 +1,7 @@
 using System;
 using Script.Common;
 using Script.CoreUObject;
+using Script.Cropout;
 using Script.Engine;
 using Script.GeometryScriptingCore;
 using Script.IslandGenerator.Misc;
@@ -14,7 +15,6 @@ namespace Script.IslandGenerator
         [IsOverride]
         public virtual void ReceiveBeginPlay()
         {
-            Console.WriteLine("1233333333333333333");
             Create_h20_Island(false);
         }
 
@@ -71,13 +71,8 @@ namespace Script.IslandGenerator
         {
             for (var i = 0; i < Islands; ++i)
             {
-                float BaseRadius = UKismetMathLibrary.RandomFloatInRangeFromStream(
-                    Seed,
-                    (float)Islands_h20_Size.X,
-                    (float)Islands_h20_Size.Y
-                );
-
-                float TopRadius = BaseRadius / 4f;
+                double BaseRadius = Seed.FRandRange(Islands_h20_Size.X, Islands_h20_Size.Y);
+                double TopRadius = BaseRadius / 4;
                 double Distance = Max_h20_Spawn_h20_Distance * 0.5f;
 
                 FVector UnitVector = Seed.VRand();
@@ -91,8 +86,8 @@ namespace Script.IslandGenerator
                     DynMesh,
                     Options,
                     Transform,
-                    BaseRadius,
-                    TopRadius,
+                    (float)BaseRadius,
+                    (float)TopRadius,
                     1300f,
                     32,
                     1

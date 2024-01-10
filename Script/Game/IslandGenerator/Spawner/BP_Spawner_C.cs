@@ -96,13 +96,8 @@ namespace Script.IslandGenerator.Spawner
             {
                 FVector Pos = new FVector();
                 RandomBiomePoint(ref Pos);
-                
-                int Max = UKismetMathLibrary.RandomIntegerInRangeFromStream(
-                    Seed,
-                    0,
-                    SpawnParams.Spawn_h20_Per_h20_Biome
-                );
 
+                int Max = Seed.RandRange(0, SpawnParams.Spawn_h20_Per_h20_Biome);
                 for (int j = 0; j < Max; ++j)
                 {
                     FVector SpawnPos = new FVector();
@@ -158,21 +153,13 @@ namespace Script.IslandGenerator.Spawner
         public virtual void SpawnInst(UInstancedStaticMeshComponent Class = null, Single Radius = 0f,
             Int32 Biome_h20_Count = 0, Int32 Max_h20_Spawn = 0)
         {
-            
-            Console.WriteLine("SpawnInst Biome_h20_Count " + Biome_h20_Count);
-            
             int Counter = 0;
             for (int i = 0; i <= Biome_h20_Count; ++i)
             {
                 FVector Pos = new FVector();
                 RandomBiomePoint(ref Pos);
-
-                int Max = UKismetMathLibrary.RandomIntegerInRangeFromStream(
-                    Seed,
-                    0,
-                    Max_h20_Spawn
-                );
-
+                
+                int Max = Seed.RandRange(0, Max_h20_Spawn);
                 for (int j = 0; j <= Max; ++j)
                 {
                     FVector SpawnPos = new FVector();
@@ -233,6 +220,7 @@ namespace Script.IslandGenerator.Spawner
                     Index_h20_Counter = 0;
                     Actor_h20_Switch = false;
                 }
+                
                 TickIfSpawn();
             }
             else
@@ -241,9 +229,9 @@ namespace Script.IslandGenerator.Spawner
                     UInstancedStaticMeshComponent.StaticClass(),
                     false,
                     new FTransform(),
-                    true
+                    false
                 ) as UInstancedStaticMeshComponent;
-
+                
                 ST_SpawnInstance Data = SpawnInstances[Index_h20_Counter];
                 Component.SetStaticMesh(Data.ClassRef);
 
