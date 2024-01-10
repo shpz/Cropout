@@ -44,6 +44,7 @@ namespace Script.IslandGenerator
 
             ReleaseAllComputeMeshes();
             GenNavmesh();
+            NotifyGenComplete();
         }
 
         /**
@@ -281,6 +282,12 @@ namespace Script.IslandGenerator
             var Offset = new FVector(0, 0, 0.05);
             var HitResult = new FHitResult();
             K2_AddActorWorldOffset(Offset, false, ref HitResult, false);
+        }
+
+        protected void NotifyGenComplete()
+        {
+            var BPI = UGameplayStatics.GetGameMode(GetWorld()) as IBPI_IslandPlugin_C;
+            BPI.Island_h20_Gen_h20_Complete();
         }
     }
 }

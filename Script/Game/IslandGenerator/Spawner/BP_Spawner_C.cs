@@ -35,7 +35,7 @@ namespace Script.IslandGenerator.Spawner
         public virtual void Finished_h20_Spawning()
         {
             (UGameplayStatics.GetGameInstance(this) as IBPI_GI_C)?.Update_h20_All_h20_Interactables();
-            (UGameplayStatics.GetGameInstance(this) as IBPI_IslandPlugin_C)?.Spawning_h20_Complete();
+            (UGameplayStatics.GetGameMode(GetWorld()) as IBPI_IslandPlugin_C)?.Spawning_h20_Complete();
         }
 
         [IsOverride]
